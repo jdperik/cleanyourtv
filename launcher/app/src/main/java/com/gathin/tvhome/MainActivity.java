@@ -51,6 +51,7 @@ import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.PopupWindow;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -95,6 +96,8 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     private GlassView glass;
     private View ambient;
     private TextView heroName;
+    /** The greeting, clock and date block when header_above_dock moved it above the dock; else null. */
+    private View header;
     private int ambientColor = -1;
     private ValueAnimator ambientAnimator;
     private boolean heroShown;
@@ -268,6 +271,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
             heroLp.setMarginStart(margin + side + (cellW - tileW) / 2 - Math.round(4 * density));
             heroName.setLayoutParams(heroLp);
         }
+        if (getResources().getBoolean(R.bool.header_above_dock)) moveHeaderAboveDock(heroLp.getMarginStart(), margin);
         grid.setItemAnimator(null);
         grid.addItemDecoration(new DockDecoration(COLUMNS, density));
         if (animations) {
@@ -296,12 +300,14 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
             if (grid.getPaddingTop() != want) {
                 grid.setPadding(grid.getPaddingLeft(), want, grid.getPaddingRight(), grid.getPaddingBottom());
             }
+            if (header != null) grid.post(this::placeHeader);
         });
 
         // Keep the glass glued to its tile while the grid scrolls.
         grid.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
             public void onScrolled(@NonNull RecyclerView rv, int dx, int dy) {
+                if (header != null) header.setTranslationY(header.getTranslationY() - dy);
                 if (!glassShown) return;
                 glassTargetY -= dy;
                 glassScrollShift -= dy;
@@ -646,6 +652,41 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     }
 
     // ---- top shelf -------------------------------------------------------------------------------
+
+    /** config.xml header_above_dock: the greeting, clock and date leave the top bar and take the top
+     *  shelf's place above the dock, where the app name would show; the buttons stay at the top. */
+    private void moveHeaderAboveDock(int start, int end) {
+        header = findViewById(R.id.leftBlock);
+        ((ViewGroup) header.getParent()).removeView(header);
+        FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        lp.setMarginStart(start);
+        lp.setMarginEnd(end);
+        root.addView(header, lp);
+        header.setAlpha(0f);   // until placeHeader has found the dock
+        View buttons = findViewById(R.id.topButtons);
+        RelativeLayout.LayoutParams blp = (RelativeLayout.LayoutParams) buttons.getLayoutParams();
+        blp.removeRule(RelativeLayout.ALIGN_BOTTOM);
+        blp.addRule(RelativeLayout.ALIGN_PARENT_TOP);
+        blp.bottomMargin = 0;
+        buttons.setLayoutParams(blp);
+        heroName.setVisibility(View.GONE);
+        header.addOnLayoutChangeListener((v, l, t, r, b, ol, ot, or, ob) -> header.post(this::placeHeader));
+    }
+
+    /** Puts the moved header just above the dock band, where the top shelf sits. */
+    private void placeHeader() {
+        RecyclerView.ViewHolder vh = grid.findViewHolderForAdapterPosition(0);
+        if (vh == null) return;
+        View card = vh.itemView.findViewById(R.id.card);
+        int[] g = new int[2], r = new int[2];
+        grid.getLocationInWindow(g);
+        root.getLocationInWindow(r);
+        float tileTop = g[1] - r[1] + vh.itemView.getTop() + card.getTop();
+        header.setTranslationY(0f);
+        header.setY(tileTop - 14 * density - 22 * density - header.getHeight());
+        if (header.getAlpha() == 0f) header.animate().alpha(1f).setDuration(animations ? 200 : 0).start();
+    }
 
     private void showHero(int position, float dockTopInRoot) {
         String label = adapter.labelAt(position);

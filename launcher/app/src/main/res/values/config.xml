@@ -79,6 +79,10 @@
     <integer name="screen_margin">56</integer>
     <integer name="dock_bottom_gap">30</integer>
     <integer name="max_tile_width">180</integer>
+    <!-- true: drop the focused app's name above the dock and show the greeting, clock and date there
+         instead; the top bar keeps only its buttons. false: the header sits in the top bar. -->
+    <bool name="header_above_dock">false</bool>
+
     <!-- Gap between tiles in dp. 0 spreads the columns over the full width; a value above 0 narrows
          them to the tile plus this gap and centres the dock and grid (never below what the focus zoom
          needs). -->
