@@ -21,11 +21,14 @@ public class GlassView extends View {
     private final Paint glow = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final RectF rect = new RectF();
     private final float density;
+    /** config.xml focus_glow: strength of the soft outer glow, 0 to 1. */
+    private final float glowStrength;
     private float radius;
 
     public GlassView(Context context, AttributeSet attrs) {
         super(context, attrs);
         density = getResources().getDisplayMetrics().density;
+        glowStrength = Math.max(0, Math.min(100, getResources().getInteger(R.integer.focus_glow))) / 100f;
         radius = 20f * density;
         rim.setStyle(Paint.Style.STROKE);
         rim.setStrokeWidth(1.5f * density);
@@ -56,9 +59,9 @@ public class GlassView extends View {
 
         // Outer glow: three widening, fading strokes. The hardware layer caches the result, so
         // they cost one draw, not one per frame of the spring.
-        for (int i = 1; i <= 3; i++) {
+        for (int i = 1; i <= 3 && glowStrength > 0f; i++) {
             glow.setStrokeWidth(i * 2f * density);
-            glow.setColor((0x30 / i) << 24 | 0xFFFFFF);
+            glow.setColor(Math.round(0x30 / i * glowStrength) << 24 | 0xFFFFFF);
             float o = i * density;
             canvas.drawRoundRect(rect.left - o, rect.top - o, rect.right + o, rect.bottom + o, radius + o, radius + o, glow);
         }

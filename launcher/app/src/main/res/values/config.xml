@@ -98,6 +98,9 @@
     <!-- Basic motion is on; advanced effects are opt-in in the launcher's own Settings screen. -->
     <bool name="animations">true</bool>
     <bool name="advanced_effects">false</bool>
+    <!-- Soft outer glow around the glass focus highlight, in percent. On a dark dock band it reads as
+         a grey haze around the tile; 0 leaves only the crisp rim. 100 = as designed. -->
+    <integer name="focus_glow">100</integer>
 
     <!-- Optional Default-home tile; keep this key for existing themes and tile-ordering work.
          Off by default because the chooser is also available from launcher settings. -->
