@@ -78,9 +78,9 @@
          strip under the tiles). max_tile_width: tiles grow to fill their column up to this width. -->
     <integer name="screen_margin">32</integer>
     <integer name="dock_bottom_gap">-10</integer>
-    <integer name="max_tile_width">160</integer>
+    <integer name="max_tile_width">120</integer>
     <!-- Size of the top bar's buttons in percent, scaled from its outer top corner. 100 = as designed. -->
-    <integer name="top_bar_scale">100</integer>
+    <integer name="top_bar_scale">70</integer>
 
     <!-- true: drop the focused app's name above the dock and show the greeting, clock and date there
          instead; the top bar keeps only its buttons. false: the header sits in the top bar. -->
@@ -89,7 +89,7 @@
     <!-- Gap between tiles in dp. 0 spreads the columns over the full width; a value above 0 narrows
          them to the tile plus this gap and centres the dock and grid (never below what the focus zoom
          needs). -->
-    <integer name="tile_spacing">32</integer>
+    <integer name="tile_spacing">24</integer>
 
     <!-- Tiles per row in the grid; the dock always has this many slots. Tiles are 180dp wide at 4 columns and
          shrink to fit from 5 up (about 144dp at 5, 117dp at 6 on a 1080p TV). -->
