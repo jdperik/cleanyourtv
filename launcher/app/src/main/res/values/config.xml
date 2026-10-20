@@ -80,7 +80,7 @@
     <integer name="dock_bottom_gap">-10</integer>
     <integer name="max_tile_width">120</integer>
     <!-- Draw the lighter rounded band behind the dock row. false leaves the dock tiles on the background. -->
-    <bool name="dock_band">true</bool>
+    <bool name="dock_band">false</bool>
 
     <!-- Size of the top bar's buttons in percent, scaled from its outer top corner. 100 = as designed. -->
     <integer name="top_bar_scale">70</integer>
@@ -100,13 +100,13 @@
 
     <!-- Basic motion is on; advanced effects are opt-in in the launcher's own Settings screen. -->
     <bool name="animations">true</bool>
-    <bool name="advanced_effects">false</bool>
+    <bool name="advanced_effects">true</bool>
     <!-- With advanced effects: raise the focused tile 4dp and cast a shadow under it. false zooms the
          tile evenly about its centre instead, so the gaps to the dock band stay even all round. -->
-    <bool name="tile_lift">true</bool>
+    <bool name="tile_lift">false</bool>
     <!-- Soft outer glow around the glass focus highlight, in percent. On a dark dock band it reads as
          a grey haze around the tile; 0 leaves only the crisp rim. 100 = as designed. -->
-    <integer name="focus_glow">100</integer>
+    <integer name="focus_glow">0</integer>
 
     <!-- Optional Default-home tile; keep this key for existing themes and tile-ordering work.
          Off by default because the chooser is also available from launcher settings. -->
@@ -126,5 +126,5 @@
          horizon glow around sunrise and sunset. 0 keeps the plain background (the default); 1 to 100
          sets its opacity. Around 60 reads clearly without hiding a wallpaper. Can also be set with
          "sky_intensity": 60 in a theme's config.json. -->
-    <integer name="sky_intensity">0</integer>
+    <integer name="sky_intensity">60</integer>
 </resources>
