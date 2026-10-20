@@ -9,26 +9,30 @@
 
     <!-- Apps pinned to the dock row at the bottom, in this order. Missing apps are skipped. -->
     <string-array name="dock_apps">
-        <item>com.netflix.ninja</item>
-        <item>com.amazon.amazonvideo.livingroom</item>
         <item>com.google.android.youtube.tv</item>
-        <item>in.startv.hotstar</item>
+        <item>com.netflix.ninja</item>
+        <item>com.apple.atve.sony.appletv</item>
+        <item>com.disney.disneyplus</item>
     </string-array>
 
     <!-- Apps never shown as tiles (e.g. the Live TV app, which the Inputs menu already covers). -->
     <string-array name="hidden_apps">
         <item>com.mediatek.wwtv.tvcenter</item>
         <item>com.mitv.gallery</item>
+        <item>com.sony.dtv.timers</item>
+        <item>com.sony.dtv.tvx</item>
+        <item>com.android.vending</item>
+        <item>com.sony.dtv.notificationcenter</item>
     </string-array>
 
     <!-- Apps opened by the round icon buttons in the top bar: the app store and the TV's notification
          centre. Leave empty, or name an app the TV lacks, to omit the button. List them in hidden_apps
          too so they do not also show as tiles. -->
-    <string name="store_package" translatable="false"></string>
-    <string name="notifications_package" translatable="false"></string>
+    <string name="store_package" translatable="false">com.android.vending</string>
+    <string name="notifications_package" translatable="false">com.sony.dtv.notificationcenter</string>
 
     <!-- The TV's Live TV / tuner app, offered at the end of the Inputs menu. Leave empty to omit. -->
-    <string name="live_tv_package" translatable="false">com.mediatek.wwtv.tvcenter</string>
+    <string name="live_tv_package" translatable="false">com.sony.dtv.tvx</string>
 
     <!-- Some TVs give their Live TV app no leanback entry point at all, so `live_tv_package` above
          resolves to nothing (TCL Android TV 9 on China-market sets is one). This action is then sent

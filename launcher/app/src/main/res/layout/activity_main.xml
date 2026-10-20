@@ -189,6 +189,7 @@
                 <TextView
                     android:id="@+id/btnWifi"
                     style="@style/TopButton"
+                    android:visibility="gone"
                     android:maxWidth="180dp"
                     android:singleLine="true"
                     android:ellipsize="end"
