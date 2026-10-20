@@ -21,6 +21,7 @@ import android.graphics.Rect;
 import android.graphics.Shader;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.ColorDrawable;
+import android.graphics.drawable.Drawable;
 import android.media.tv.TvContract;
 import android.media.tv.TvInputInfo;
 import android.media.tv.TvInputManager;
@@ -40,6 +41,7 @@ import android.text.SpannableString;
 import android.text.Spanned;
 import android.text.TextPaint;
 import android.text.TextUtils;
+import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.View;
@@ -96,6 +98,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     private GlassView glass;
     private View ambient;
     private TextView heroName;
+    private int screenMarginPx;
     /** The greeting, clock and date block when header_above_dock moved it above the dock; else null. */
     private View header;
     private int ambientColor = -1;
@@ -227,6 +230,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         heroName = findViewById(R.id.heroName);
         // config.xml screen_margin: the side gap of the whole screen; the top shelf keeps its 12dp indent.
         int margin = Math.round(getResources().getInteger(R.integer.screen_margin) * density);
+        screenMarginPx = margin;
         View content = findViewById(R.id.content);
         content.setPaddingRelative(margin, content.getPaddingTop(), margin, content.getPaddingBottom());
         ViewGroup.MarginLayoutParams heroLp = (ViewGroup.MarginLayoutParams) heroName.getLayoutParams();
@@ -361,6 +365,10 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         // Keep focus on the top bar at its ends and at the top: Android's focus finder would otherwise
         // jump to a tile far below when there is nothing in that direction.
         boolean rtlMenuBar = getResources().getBoolean(R.bool.rtl_menu_bar);
+        // config.xml top_bar_scale: resize the buttons themselves (not a view transform, so the Inputs
+        // menu still drops from the real button edges).
+        float barScale = getResources().getInteger(R.integer.top_bar_scale) / 100f;
+        if (barScale != 1f) scaleTopBar((ViewGroup) findViewById(R.id.topButtons), barScale);
         View.OnKeyListener pillKeys = (v, keyCode, event) -> {
             if (event.getAction() != KeyEvent.ACTION_DOWN) return false;
             if (keyCode == KeyEvent.KEYCODE_DPAD_UP) return true;
@@ -1190,12 +1198,45 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     }
 
     /** Drop in: fade and unfold from the top edge, hanging under the anchor pill. */
+    /** Scales every button in the top bar: size, margins, padding, text and icons. */
+    private static void scaleTopBar(ViewGroup bar, float s) {
+        for (int i = 0; i < bar.getChildCount(); i++) {
+            View b = bar.getChildAt(i);
+            ViewGroup.MarginLayoutParams lp = (ViewGroup.MarginLayoutParams) b.getLayoutParams();
+            if (lp.width > 0) lp.width = Math.round(lp.width * s);
+            if (lp.height > 0) lp.height = Math.round(lp.height * s);
+            lp.setMarginStart(Math.round(lp.getMarginStart() * s));
+            lp.setMarginEnd(Math.round(lp.getMarginEnd() * s));
+            b.setLayoutParams(lp);
+            b.setPaddingRelative(Math.round(b.getPaddingStart() * s), Math.round(b.getPaddingTop() * s),
+                    Math.round(b.getPaddingEnd() * s), Math.round(b.getPaddingBottom() * s));
+            if (b instanceof TextView) {
+                TextView t = (TextView) b;
+                t.setTextSize(TypedValue.COMPLEX_UNIT_PX, t.getTextSize() * s);
+                t.setCompoundDrawablePadding(Math.round(t.getCompoundDrawablePadding() * s));
+                if (t.getMaxWidth() > 0 && t.getMaxWidth() < Integer.MAX_VALUE) t.setMaxWidth(Math.round(t.getMaxWidth() * s));
+                Drawable[] d = t.getCompoundDrawablesRelative();
+                for (Drawable icon : d) {
+                    if (icon != null) icon.setBounds(0, 0, Math.round(icon.getIntrinsicWidth() * s), Math.round(icon.getIntrinsicHeight() * s));
+                }
+                t.setCompoundDrawablesRelative(d[0], d[1], d[2], d[3]);
+            }
+        }
+    }
+
     private void dropIn(PopupWindow popup, View panel, View anchor, int gravity) {
         panel.setAlpha(0f);
         panel.setPivotY(0f);
         panel.setScaleY(0.92f);
         panel.setTranslationY(-8 * density);
-        popup.showAsDropDown(anchor, 0, (int) (10 * density), gravity);
+        // Keep the screen margin on the far side: a wide menu under a small top bar would reach the edge.
+        int[] at = new int[2];
+        anchor.getLocationInWindow(at);
+        int screenW = getResources().getDisplayMetrics().widthPixels;
+        int xoff = 0;
+        if (gravity == Gravity.START) xoff = Math.min(0, screenW - screenMarginPx - (at[0] + popup.getWidth()));
+        else xoff = Math.max(0, screenMarginPx - (at[0] + anchor.getWidth() - popup.getWidth()));
+        popup.showAsDropDown(anchor, xoff, (int) (10 * density), gravity);
         panel.animate().alpha(1f).scaleY(1f).translationY(0f).setDuration(220)
                 .setInterpolator(new android.view.animation.DecelerateInterpolator(1.6f)).start();
     }

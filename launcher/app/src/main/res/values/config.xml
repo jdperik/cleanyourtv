@@ -79,6 +79,9 @@
     <integer name="screen_margin">32</integer>
     <integer name="dock_bottom_gap">-10</integer>
     <integer name="max_tile_width">160</integer>
+    <!-- Size of the top bar's buttons in percent, scaled from its outer top corner. 100 = as designed. -->
+    <integer name="top_bar_scale">100</integer>
+
     <!-- true: drop the focused app's name above the dock and show the greeting, clock and date there
          instead; the top bar keeps only its buttons. false: the header sits in the top bar. -->
     <bool name="header_above_dock">true</bool>
