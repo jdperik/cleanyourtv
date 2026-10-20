@@ -96,6 +96,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     private View ambient;
     private TextView heroName;
     private int screenMarginPx;
+    private boolean tileLift;
     /** The greeting, clock and date block when header_above_dock moved it above the dock; else null. */
     private View header;
     private int ambientColor = -1;
@@ -228,6 +229,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         // config.xml screen_margin: the side gap of the whole screen; the top shelf keeps its 12dp indent.
         int margin = Math.round(getResources().getInteger(R.integer.screen_margin) * density);
         screenMarginPx = margin;
+        tileLift = getResources().getBoolean(R.bool.tile_lift);
         View content = findViewById(R.id.content);
         content.setPaddingRelative(margin, content.getPaddingTop(), margin, content.getPaddingBottom());
         ViewGroup.MarginLayoutParams heroLp = (ViewGroup.MarginLayoutParams) heroName.getLayoutParams();
@@ -607,7 +609,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         float w = card.getWidth() * scale + 2 * pad;
         float h = card.getHeight() * scale + 2 * pad;
         float x = r.exactCenterX() - w / 2f;
-        float y = r.exactCenterY() - h / 2f - (advancedEffects ? 4f * density : 0f);
+        float y = r.exactCenterY() - h / 2f - (advancedEffects && tileLift ? 4f * density : 0f);
 
         ViewGroup.LayoutParams lp = glass.getLayoutParams();
         if (lp.width != (int) w || lp.height != (int) h) {
