@@ -21,6 +21,12 @@
         <item>com.mitv.gallery</item>
     </string-array>
 
+    <!-- Apps opened by the round icon buttons in the top bar: the app store and the TV's notification
+         centre. Leave empty, or name an app the TV lacks, to omit the button. List them in hidden_apps
+         too so they do not also show as tiles. -->
+    <string name="store_package" translatable="false"></string>
+    <string name="notifications_package" translatable="false"></string>
+
     <!-- The TV's Live TV / tuner app, offered at the end of the Inputs menu. Leave empty to omit. -->
     <string name="live_tv_package" translatable="false">com.mediatek.wwtv.tvcenter</string>
 

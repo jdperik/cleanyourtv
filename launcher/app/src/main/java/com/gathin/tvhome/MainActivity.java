@@ -11,6 +11,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -315,6 +316,10 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
             return true;
         });
         btnSettings.setOnClickListener(v -> open(systemIntent(Settings.ACTION_SETTINGS)));
+        View btnStore = findViewById(R.id.btnStore);
+        View btnNotifications = findViewById(R.id.btnNotifications);
+        bindAppButton(btnStore, getString(R.string.store_package));
+        bindAppButton(btnNotifications, getString(R.string.notifications_package));
         btnSettings.setOnLongClickListener(v -> {
             showSettingsMenu();
             return true;
@@ -340,8 +345,10 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         btnInputs.setOnKeyListener(pillKeys);
         btnWifi.setOnKeyListener(pillKeys);
         btnSettings.setOnKeyListener(pillKeys);
+        btnStore.setOnKeyListener(pillKeys);
+        btnNotifications.setOnKeyListener(pillKeys);
         if (advancedEffects) {
-            for (View button : new View[]{btnInputs, btnWifi, btnSettings}) {
+            for (View button : new View[]{btnInputs, btnStore, btnNotifications, btnWifi, btnSettings}) {
                 button.setOnFocusChangeListener((view, focused) -> view.animate()
                         .scaleX(focused ? 1.04f : 1f).scaleY(focused ? 1.04f : 1f)
                         .setDuration(160).start());
@@ -938,6 +945,26 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         } catch (Exception e) {
             Toast.makeText(this, R.string.not_available, Toast.LENGTH_SHORT).show();
         }
+    }
+
+    /** Shows a top-bar icon button that opens {@code pkg}, or hides it when the TV has no such app. */
+    private void bindAppButton(View button, String pkg) {
+        if (pkg.isEmpty() || launchIntentFor(pkg) == null) {
+            button.setVisibility(View.GONE);
+            return;
+        }
+        button.setVisibility(View.VISIBLE);
+        button.setOnClickListener(v -> {
+            Intent i = launchIntentFor(pkg);
+            if (i == null) Toast.makeText(this, R.string.not_available, Toast.LENGTH_SHORT).show();
+            else open(i);
+        });
+    }
+
+    private Intent launchIntentFor(String pkg) {
+        PackageManager pm = getPackageManager();
+        Intent i = pm.getLeanbackLaunchIntentForPackage(pkg);
+        return i != null ? i : pm.getLaunchIntentForPackage(pkg);
     }
 
     private void open(Intent i) {

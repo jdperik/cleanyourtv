@@ -190,6 +190,22 @@
                     android:drawableStart="@drawable/ic_wifi"
                     android:nextFocusDown="@+id/grid" />
 
+                <ImageView
+                    android:id="@+id/btnNotifications"
+                    style="@style/TopIconButton"
+                    android:src="@drawable/ic_bell"
+                    android:contentDescription="@string/notifications"
+                    android:visibility="gone"
+                    android:nextFocusDown="@+id/grid" />
+
+                <ImageView
+                    android:id="@+id/btnStore"
+                    style="@style/TopIconButton"
+                    android:src="@drawable/ic_store"
+                    android:contentDescription="@string/store"
+                    android:visibility="gone"
+                    android:nextFocusDown="@+id/grid" />
+
                 <TextView
                     android:id="@+id/btnInputs"
                     style="@style/TopButton"
