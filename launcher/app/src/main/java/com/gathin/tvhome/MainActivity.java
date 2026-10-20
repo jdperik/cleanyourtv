@@ -16,10 +16,7 @@ import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
-import android.graphics.RadialGradient;
 import android.graphics.Rect;
-import android.graphics.Shader;
-import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.media.tv.TvContract;
@@ -765,25 +762,12 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     private void setAmbient(int color) {
         if (color == ambientColor && ambient.getBackground() != null) return;
         ambientColor = color;
-        BitmapDrawable glow = (BitmapDrawable) ambient.getBackground();
+        GlowDrawable glow = (GlowDrawable) ambient.getBackground();
         if (glow == null) {
-            int w = 480;
-            int h = 270;
-            Bitmap bmp = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
-            Canvas canvas = new Canvas(bmp);
-            Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
-            paint.setShader(new RadialGradient(
-                    w * 0.32f, h * 0.42f, w * 0.62f,
-                    new int[]{0x5CFFFFFF, 0x26FFFFFF, 0x00FFFFFF},
-                    new float[]{0f, 0.45f, 1f},
-                    Shader.TileMode.CLAMP));
-            canvas.drawRect(0, 0, w, h, paint);
-            glow = new BitmapDrawable(getResources(), bmp);
-            glow.setGravity(Gravity.FILL);
+            glow = new GlowDrawable();
             ambient.setBackground(glow);
         }
-        // The default tint mode, SRC_IN, keeps the mask's alpha and takes the colour from the tint.
-        glow.setTint(0xFF000000 | color);
+        glow.setColor(color);
     }
 
     private void transitionAmbient(int color) {
