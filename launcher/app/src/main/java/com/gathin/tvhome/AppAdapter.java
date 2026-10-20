@@ -91,8 +91,8 @@ public class AppAdapter extends RecyclerView.Adapter<AppAdapter.Holder> {
      * Tile width for a grid of this inner width: the cell minus room for the focus zoom and the glass
      * highlight, capped at the design size so 4 columns on a 1080p TV look exactly as before.
      */
-    static int tileWidthPx(int innerWidthPx, int columns, float density) {
-        int design = Math.round(DESIGN_W_DP * density);
+    static int tileWidthPx(int innerWidthPx, int columns, float density, int maxWidthDp) {
+        int design = Math.round(maxWidthDp * density);
         if (innerWidthPx <= 0 || columns <= 0) return design;
         int cell = innerWidthPx / columns;
         int fit = (int) ((cell - 12 * density) / FOCUS_SCALE);
@@ -212,7 +212,8 @@ public class AppAdapter extends RecyclerView.Adapter<AppAdapter.Holder> {
         float density = parent.getResources().getDisplayMetrics().density;
         int width = parent.getWidth() > 0 ? parent.getWidth() : parent.getMeasuredWidth();
         int inner = width - parent.getPaddingLeft() - parent.getPaddingRight();
-        int w = tileWidthPx(inner, dockSize, density), h = tileHeightPx(w);
+        int w = tileWidthPx(inner, dockSize, density,
+                parent.getResources().getInteger(R.integer.max_tile_width)), h = tileHeightPx(w);
         View card = v.findViewById(R.id.card);
         ViewGroup.LayoutParams cardLp = card.getLayoutParams();
         cardLp.width = w;

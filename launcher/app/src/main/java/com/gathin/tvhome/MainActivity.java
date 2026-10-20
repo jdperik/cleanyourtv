@@ -222,6 +222,13 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         // a fade renders it into a full-screen offscreen buffer first.
         ambient.forceHasOverlappingRendering(false);
         heroName = findViewById(R.id.heroName);
+        // config.xml screen_margin: the side gap of the whole screen; the top shelf keeps its 12dp indent.
+        int margin = Math.round(getResources().getInteger(R.integer.screen_margin) * density);
+        View content = findViewById(R.id.content);
+        content.setPaddingRelative(margin, content.getPaddingTop(), margin, content.getPaddingBottom());
+        ViewGroup.MarginLayoutParams heroLp = (ViewGroup.MarginLayoutParams) heroName.getLayoutParams();
+        heroLp.setMarginStart(margin + Math.round(12 * density));
+        heroName.setLayoutParams(heroLp);
         greeting = findViewById(R.id.greeting);
         btnWifi = findViewById(R.id.btnWifi);
         shamsiDate = findViewById(R.id.shamsiDate);
@@ -246,6 +253,21 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
             }
         });
         grid.setHasFixedSize(true);
+        // config.xml tile_spacing: narrow the columns to the tile plus that gap and centre them, instead of
+        // spreading the tiles over the full width. Set before the first layout, from the screen width the
+        // grid spans, so the tiles are laid out once; the gap never drops below what the focus zoom needs.
+        int tileSpacing = getResources().getInteger(R.integer.tile_spacing);
+        if (tileSpacing > 0) {
+            int full = getResources().getDisplayMetrics().widthPixels - 2 * margin;
+            int tileW = AppAdapter.tileWidthPx(full, COLUMNS, density, getResources().getInteger(R.integer.max_tile_width));
+            int minGap = (int) Math.ceil(tileW * (AppAdapter.FOCUS_SCALE - 1f) + 12 * density);
+            int cell = tileW + Math.max(minGap, Math.round(tileSpacing * density));
+            int side = Math.max(0, (full - cell * COLUMNS) / 2);
+            grid.setPadding(side, grid.getPaddingTop(), side, grid.getPaddingBottom());
+            int cellW = (full - 2 * side) / COLUMNS;
+            heroLp.setMarginStart(margin + side + (cellW - tileW) / 2 - Math.round(4 * density));
+            heroName.setLayoutParams(heroLp);
+        }
         grid.setItemAnimator(null);
         grid.addItemDecoration(new DockDecoration(COLUMNS, density));
         if (animations) {
@@ -260,14 +282,17 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         // tvOS layout: push the dock row towards the bottom of the screen, leaving room for
         // rows_below_dock grid rows under it; the rest of the grid stays below until you press Down.
         int rowsBelowDock = cfg.rowsBelowDock;
+        int dockBottomGap = getResources().getInteger(R.integer.dock_bottom_gap);
+        int maxTileWidth = getResources().getInteger(R.integer.max_tile_width);
         grid.addOnLayoutChangeListener((v, l, t, r, b, ol, ot, or, ob) -> {
             int h = b - t;
             // Item height follows the tile size, which follows the column count (AppAdapter.tileWidthPx).
             int inner = (r - l) - grid.getPaddingLeft() - grid.getPaddingRight();
-            int itemH = AppAdapter.itemHeightPx(AppAdapter.tileHeightPx(AppAdapter.tileWidthPx(inner, COLUMNS, density)), density);
+            int itemH = AppAdapter.itemHeightPx(AppAdapter.tileHeightPx(
+                    AppAdapter.tileWidthPx(inner, COLUMNS, density, maxTileWidth)), density);
             int dockRow = itemH + (int) ((6 + 12) * density);   // item height plus DockDecoration offsets
             int gridRows = itemH * rowsBelowDock;
-            int want = Math.max(0, h - dockRow - gridRows - (int) (30 * density));
+            int want = Math.max(0, h - dockRow - gridRows - (int) (dockBottomGap * density));
             if (grid.getPaddingTop() != want) {
                 grid.setPadding(grid.getPaddingLeft(), want, grid.getPaddingRight(), grid.getPaddingBottom());
             }
