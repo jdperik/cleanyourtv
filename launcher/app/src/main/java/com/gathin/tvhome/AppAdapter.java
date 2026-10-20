@@ -195,8 +195,9 @@ public class AppAdapter extends RecyclerView.Adapter<AppAdapter.Holder> {
         if (id != 0) {
             try {
                 Resources resources = pm.getResourcesForApplication(ri.activityInfo.applicationInfo);
-                // Keep at least xhdpi detail rather than downsampling artwork before the focus zoom.
-                int density = Math.max(DisplayMetrics.DENSITY_XHIGH, ctx.getResources().getDisplayMetrics().densityDpi);
+                // Ask for the sharpest artwork the app ships: tiles are wider than a 320x180 xhdpi banner
+                // and the 1080p UI is upscaled to a 4K panel, so xhdpi art looks soft.
+                int density = Math.max(DisplayMetrics.DENSITY_XXXHIGH, ctx.getResources().getDisplayMetrics().densityDpi);
                 return resources.getDrawableForDensity(id, density, null);
             } catch (PackageManager.NameNotFoundException | Resources.NotFoundException ignored) {
             }
