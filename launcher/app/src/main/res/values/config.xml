@@ -79,6 +79,9 @@
     <integer name="screen_margin">32</integer>
     <integer name="dock_bottom_gap">-10</integer>
     <integer name="max_tile_width">120</integer>
+    <!-- Draw the lighter rounded band behind the dock row. false leaves the dock tiles on the background. -->
+    <bool name="dock_band">true</bool>
+
     <!-- Size of the top bar's buttons in percent, scaled from its outer top corner. 100 = as designed. -->
     <integer name="top_bar_scale">70</integer>
 

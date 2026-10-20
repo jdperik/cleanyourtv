@@ -39,6 +39,8 @@ public class DockDecoration extends RecyclerView.ItemDecoration {
 
     @Override
     public void onDraw(@NonNull Canvas c, @NonNull RecyclerView parent, @NonNull RecyclerView.State state) {
+        // config.xml dock_band: false leaves the dock tiles on the background, keeping only the gap below.
+        if (!parent.getResources().getBoolean(R.bool.dock_band)) return;
         boolean any = false;
         for (int i = 0; i < parent.getChildCount(); i++) {
             View child = parent.getChildAt(i);
