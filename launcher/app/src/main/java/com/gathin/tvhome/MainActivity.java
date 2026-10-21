@@ -388,6 +388,13 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         btnStore.setOnKeyListener(pillKeys);
         btnNotifications.setOnKeyListener(pillKeys);
         if (advancedEffects) {
+            // The focused button grows past the bar and, at the outer end, past the screen margin; let
+            // it draw outside the bar and its parents instead of being clipped flat.
+            for (ViewGroup g = findViewById(R.id.topButtons); g != null && g.getId() != R.id.root;
+                 g = (ViewGroup) g.getParent()) {
+                g.setClipChildren(false);
+                g.setClipToPadding(false);
+            }
             for (View button : new View[]{btnInputs, btnStore, btnNotifications, btnWifi, btnSettings}) {
                 button.setOnFocusChangeListener((view, focused) -> view.animate()
                         .scaleX(focused ? 1.04f : 1f).scaleY(focused ? 1.04f : 1f)
