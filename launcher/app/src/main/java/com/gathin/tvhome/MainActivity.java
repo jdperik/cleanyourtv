@@ -700,7 +700,10 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         root.getLocationInWindow(r);
         float tileTop = g[1] - r[1] + vh.itemView.getTop() + card.getTop();
         header.setTranslationY(0f);
-        header.setY(tileTop - 14 * density - 22 * density - header.getHeight());
+        // Clear the dock band's 14dp padding when it is drawn; without the band the header sits closer.
+        float band = getResources().getBoolean(R.bool.dock_band) ? 14 * density : 0f;
+        float gap = (getResources().getBoolean(R.bool.dock_band) ? 22 : 12) * density;
+        header.setY(tileTop - band - gap - header.getHeight());
         if (header.getAlpha() == 0f) header.animate().alpha(1f).setDuration(animations ? 200 : 0).start();
     }
 

@@ -119,6 +119,7 @@ public class AppAdapter extends RecyclerView.Adapter<AppAdapter.Holder> {
     private final boolean advancedEffects;
     /** config.xml tile_lift: advanced effects raise the focused tile 4dp and cast a shadow under it. */
     private final boolean tileLift;
+    private final boolean dockLabels;
     private final boolean showHomeSettings;
     /** Calmer motion for weak GPUs (config.xml, reduced_motion): no overshoot, shorter fades. */
     private final boolean reducedMotion;
@@ -133,6 +134,7 @@ public class AppAdapter extends RecyclerView.Adapter<AppAdapter.Holder> {
         this.animations = cfg.animations;
         this.advancedEffects = cfg.animations && cfg.advancedEffects;
         this.tileLift = ctx.getResources().getBoolean(R.bool.tile_lift);
+        this.dockLabels = ctx.getResources().getBoolean(R.bool.dock_labels);
         this.showHomeSettings = cfg.showHomeSettingsShortcut;
         this.reducedMotion = cfg.reducedMotion;
         // Tiles keep their identity across reload(), so a focused tile stays on its app instead of
@@ -234,7 +236,8 @@ public class AppAdapter extends RecyclerView.Adapter<AppAdapter.Holder> {
     public void onBindViewHolder(@NonNull Holder h, int position) {
         Entry e = items.get(position);
         h.name.setText(e.name);
-        h.name.setVisibility(position < dockSize ? View.INVISIBLE : View.VISIBLE);   // the dock has no labels
+        // The dock has no labels (the top shelf names the app) unless config.xml dock_labels asks for them.
+        h.name.setVisibility(position < dockSize && !dockLabels ? View.INVISIBLE : View.VISIBLE);
         boolean focused = h.card.isFocused();   // a rebind after reload() can hit the focused tile
         h.name.setAlpha(focused ? 1f : 0f);
         h.card.setScaleX(focused && animations ? focusScale() : 1f);
