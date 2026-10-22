@@ -77,11 +77,11 @@
          dock_bottom_gap: the space kept under the dock row (negative pulls it into the empty label
          strip under the tiles). max_tile_width: tiles grow to fill their column up to this width. -->
     <integer name="screen_margin">32</integer>
-    <integer name="dock_bottom_gap">-10</integer>
+    <integer name="dock_bottom_gap">0</integer>
     <integer name="max_tile_width">120</integer>
     <!-- Show the focused dock tile's name under it, as the grid does. Off by default: the top shelf
          names the app above the dock instead (and header_above_dock replaces that shelf). -->
-    <bool name="dock_labels">false</bool>
+    <bool name="dock_labels">true</bool>
 
     <!-- Draw the lighter rounded band behind the dock row. false leaves the dock tiles on the background. -->
     <bool name="dock_band">false</bool>
