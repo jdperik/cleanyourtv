@@ -49,6 +49,19 @@ is ignored, and a file that doesn't parse is ignored as a whole, so a theme can 
 under about 300 KB: the text, the hero name and the dock band are designed for black, and a 1 GB TV
 decodes the picture into memory on every Home start. Pictures larger than the screen are downsampled.
 
+## Your own banners
+
+Most apps ship a 320×180 banner, which is soft on a 4K panel. A PNG at
+`/sdcard/Android/data/com.gathin.tvhome/files/banners/<package>.png` replaces that app's banner, in the
+dock and the grid; make it 16:9, about 1280×720. It is not part of a theme, so pushing or resetting a
+theme leaves it in place. Use art you are entitled to use, and restart Home after adding one:
+
+```sh
+adb shell mkdir -p /sdcard/Android/data/com.gathin.tvhome/files/banners
+adb push com.example.app.png /sdcard/Android/data/com.gathin.tvhome/files/banners/
+adb shell am force-stop com.gathin.tvhome
+```
+
 ## Reduced motion
 
 `"reduced_motion": true` keeps the look but calms the movement: the highlight spring is stiff instead

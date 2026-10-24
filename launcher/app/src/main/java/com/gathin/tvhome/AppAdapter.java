@@ -9,6 +9,7 @@ import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Outline;
@@ -33,6 +34,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -130,6 +132,8 @@ public class AppAdapter extends RecyclerView.Adapter<AppAdapter.Holder> {
     private final List<Entry> items = new ArrayList<>();
     /** Shipped banner widths by package (see nativeWidth), for the launch cover not to upscale them. */
     private final Map<String, Integer> bannerPx = new HashMap<>();
+    /** Owner banners (ownBanner) at full size by package: the tile shows a smaller copy, the launch cover this. */
+    private final Map<String, Drawable> fullBanners = new HashMap<>();
 
     AppAdapter(Context ctx, TileListener listener, int dockSize, Config cfg) {
         this.ctx = ctx;
@@ -202,6 +206,8 @@ public class AppAdapter extends RecyclerView.Adapter<AppAdapter.Holder> {
     }
 
     private Drawable loadBanner(PackageManager pm, ResolveInfo ri) {
+        Drawable own = ownBanner(ri.activityInfo.packageName);
+        if (own != null) return own;
         int id = ri.activityInfo.banner;
         if (id == 0) id = ri.activityInfo.applicationInfo.banner;
         if (id != 0) {
@@ -217,6 +223,31 @@ public class AppAdapter extends RecyclerView.Adapter<AppAdapter.Holder> {
             }
         }
         return ri.activityInfo.loadBanner(pm);
+    }
+
+    /**
+     * A banner the owner put on the TV for this app, {@code banners/<package>.png} in the launcher's
+     * files directory (next to config.json), used instead of the app's own: most apps ship a 320x180
+     * banner that is soft on a 4K panel. Null when there is none or it does not decode.
+     */
+    private Drawable ownBanner(String pkg) {
+        File dir = ctx.getExternalFilesDir(null);
+        if (dir == null) return null;
+        File f = new File(dir, "banners/" + pkg + ".png");
+        if (!f.isFile()) return null;
+        Bitmap full = BitmapFactory.decodeFile(f.getPath());
+        if (full == null) return null;
+        bannerPx.put(pkg, full.getWidth());
+        fullBanners.put(pkg, new BitmapDrawable(ctx.getResources(), full));
+        // The tile is drawn at a tenth of that, and one bilinear step that far leaves jagged edges:
+        // halve it while it stays at least as wide as the largest focused tile, so the last step is gentle.
+        int keep = Math.round(ctx.getResources().getInteger(R.integer.max_tile_width)
+                * ctx.getResources().getDisplayMetrics().density * FOCUS_SCALE);
+        Bitmap b = full;
+        while (b.getWidth() / 2 >= keep) {
+            b = Bitmap.createScaledBitmap(b, b.getWidth() / 2, b.getHeight() / 2, true);
+        }
+        return new BitmapDrawable(ctx.getResources(), b);
     }
 
     /**
@@ -311,7 +342,7 @@ public class AppAdapter extends RecyclerView.Adapter<AppAdapter.Holder> {
                 if (e.ambient == 0) e.ambient = vividColor(e.banner != null ? e.banner : e.icon);
                 float density = ctx.getResources().getDisplayMetrics().density;
                 Integer px = e.banner != null ? bannerPx.get(e.pkg) : null;
-                LaunchCover.show(ctx, card, px != null ? px : 0, e.ambient, cornerRadius(card.getWidth(), density), launchCoverMs);
+                LaunchCover.show(ctx, card, fullBanners.get(e.pkg), px != null ? px : 0, e.ambient, cornerRadius(card.getWidth(), density), launchCoverMs);
             }
             ctx.startActivity(i);
             if (cover && ctx instanceof Activity) {

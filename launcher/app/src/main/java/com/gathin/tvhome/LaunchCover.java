@@ -10,6 +10,7 @@ import android.graphics.Color;
 import android.graphics.Outline;
 import android.graphics.PixelFormat;
 import android.graphics.drawable.ColorDrawable;
+import android.graphics.drawable.Drawable;
 import android.os.Handler;
 import android.os.Looper;
 import android.provider.Settings;
@@ -43,9 +44,11 @@ final class LaunchCover {
 
     /**
      * Shows the cover for {@code card} (a tile on screen), lifting it after {@code holdMs} from now.
-     * {@code artPx} is the width of the banner the tile shows as the app shipped it, 0 when unknown.
+     * {@code artPx} is the width of the banner the tile shows as the app shipped it, 0 when unknown;
+     * {@code fullArt}, when not null, is a sharper copy of that banner to draw the grown tile with.
      */
-    static void show(Context ctx, View card, int artPx, int color, float cornerRadius, long holdMs) {
+    static void show(Context ctx, View card, Drawable fullArt, int artPx, int color, float cornerRadius,
+                     long holdMs) {
         WindowManager wm = ctx.getSystemService(WindowManager.class);
         int screenW = ctx.getResources().getDisplayMetrics().widthPixels;
         int screenH = ctx.getResources().getDisplayMetrics().heightPixels;
@@ -63,7 +66,11 @@ final class LaunchCover {
         Bitmap bmp = Bitmap.createBitmap(tw, th, Bitmap.Config.ARGB_8888);
         Canvas c = new Canvas(bmp);
         c.scale(k, k);
+        ImageView banner = card.findViewById(R.id.banner);
+        Drawable tileArt = banner != null ? banner.getDrawable() : null;
+        if (fullArt != null && tileArt != null) banner.setImageDrawable(fullArt);
         card.draw(c);
+        if (fullArt != null && tileArt != null) banner.setImageDrawable(tileArt);
 
         FrameLayout root = new FrameLayout(ctx);
         ColorDrawable wash = new ColorDrawable(blend(color, 0xFF0B0B10, 0.80f));
