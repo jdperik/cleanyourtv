@@ -115,7 +115,7 @@
          the app's first frames (YouTube draws half a second of black even when it is already running),
          then fades out onto the app. Needs "display over other apps":
          adb shell appops set com.gathin.tvhome SYSTEM_ALERT_WINDOW allow. 0 = off. -->
-    <integer name="launch_cover">0</integer>
+    <integer name="launch_cover">800</integer>
 
     <!-- Optional Default-home tile; keep this key for existing themes and tile-ordering work.
          Off by default because the chooser is also available from launcher settings. -->
