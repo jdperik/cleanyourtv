@@ -13,10 +13,12 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Outline;
 import android.graphics.Rect;
+import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.provider.Settings;
 import android.util.DisplayMetrics;
+import android.util.TypedValue;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -120,10 +122,14 @@ public class AppAdapter extends RecyclerView.Adapter<AppAdapter.Holder> {
     /** config.xml tile_lift: advanced effects raise the focused tile 4dp and cast a shadow under it. */
     private final boolean tileLift;
     private final boolean dockLabels;
+    /** config.xml launch_cover: how long the opening cover holds over the app, 0 for none. */
+    private final int launchCoverMs;
     private final boolean showHomeSettings;
     /** Calmer motion for weak GPUs (config.xml, reduced_motion): no overshoot, shorter fades. */
     private final boolean reducedMotion;
     private final List<Entry> items = new ArrayList<>();
+    /** Shipped banner widths by package (see nativeWidth), for the launch cover not to upscale them. */
+    private final Map<String, Integer> bannerPx = new HashMap<>();
 
     AppAdapter(Context ctx, TileListener listener, int dockSize, Config cfg) {
         this.ctx = ctx;
@@ -135,6 +141,7 @@ public class AppAdapter extends RecyclerView.Adapter<AppAdapter.Holder> {
         this.advancedEffects = cfg.animations && cfg.advancedEffects;
         this.tileLift = ctx.getResources().getBoolean(R.bool.tile_lift);
         this.dockLabels = ctx.getResources().getBoolean(R.bool.dock_labels);
+        this.launchCoverMs = ctx.getResources().getInteger(R.integer.launch_cover);
         this.showHomeSettings = cfg.showHomeSettingsShortcut;
         this.reducedMotion = cfg.reducedMotion;
         // Tiles keep their identity across reload(), so a focused tile stays on its app instead of
@@ -203,11 +210,27 @@ public class AppAdapter extends RecyclerView.Adapter<AppAdapter.Holder> {
                 // Ask for the sharpest artwork the app ships: tiles are wider than a 320x180 xhdpi banner
                 // and the 1080p UI is upscaled to a 4K panel, so xhdpi art looks soft.
                 int density = Math.max(DisplayMetrics.DENSITY_XXXHIGH, ctx.getResources().getDisplayMetrics().densityDpi);
-                return resources.getDrawableForDensity(id, density, null);
+                Drawable d = resources.getDrawableForDensity(id, density, null);
+                bannerPx.put(ri.activityInfo.packageName, nativeWidth(resources, id, density, d));
+                return d;
             } catch (PackageManager.NameNotFoundException | Resources.NotFoundException ignored) {
             }
         }
         return ri.activityInfo.loadBanner(pm);
+    }
+
+    /**
+     * The banner's width in the pixels the app shipped, before Android scaled it to the density asked
+     * for (a 320x180 xhdpi banner decodes 640 wide at xxxhdpi); 0 for a vector or other drawable.
+     */
+    private static int nativeWidth(Resources resources, int id, int density, Drawable d) {
+        if (!(d instanceof BitmapDrawable) || ((BitmapDrawable) d).getBitmap() == null) return 0;
+        Bitmap b = ((BitmapDrawable) d).getBitmap();
+        TypedValue v = new TypedValue();
+        resources.getValueForDensity(id, density, v, true);
+        int source = v.density == TypedValue.DENSITY_DEFAULT ? DisplayMetrics.DENSITY_MEDIUM : v.density;
+        if (source == TypedValue.DENSITY_NONE || b.getDensity() == Bitmap.DENSITY_NONE) return b.getWidth();
+        return Math.round(b.getWidth() * source / (float) b.getDensity());
     }
 
     @NonNull
@@ -259,7 +282,7 @@ public class AppAdapter extends RecyclerView.Adapter<AppAdapter.Holder> {
             h.label.setText(e.label);
             h.label.setVisibility(View.VISIBLE);
         }
-        h.card.setOnClickListener(v -> launch(e));
+        h.card.setOnClickListener(v -> launch(e, v));
         h.card.setOnLongClickListener(v -> {
             Intent i = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:" + e.pkg));
             i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -272,7 +295,7 @@ public class AppAdapter extends RecyclerView.Adapter<AppAdapter.Holder> {
     }
 
     /** Opens the tile's activity by explicit component, with no extras: a card can name nothing else. */
-    private void launch(Entry e) {
+    private void launch(Entry e, View card) {
         if (e.kind == Entry.HOME_SETTINGS) {
             ctx.startActivity(new Intent(ctx, HomeSettingsActivity.class)
                     .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
@@ -283,8 +306,17 @@ public class AppAdapter extends RecyclerView.Adapter<AppAdapter.Holder> {
                 .setComponent(e.component)
                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED);
         try {
+            boolean cover = launchCoverMs > 0 && animations && LaunchCover.available(ctx);
+            if (cover) {
+                if (e.ambient == 0) e.ambient = vividColor(e.banner != null ? e.banner : e.icon);
+                float density = ctx.getResources().getDisplayMetrics().density;
+                Integer px = e.banner != null ? bannerPx.get(e.pkg) : null;
+                LaunchCover.show(ctx, card, px != null ? px : 0, e.ambient, cornerRadius(card.getWidth(), density), launchCoverMs);
+            }
             ctx.startActivity(i);
-            if (advancedEffects && ctx instanceof Activity) {
+            if (cover && ctx instanceof Activity) {
+                ((Activity) ctx).overridePendingTransition(0, 0);   // the cover is the transition
+            } else if (advancedEffects && ctx instanceof Activity) {
                 ((Activity) ctx).overridePendingTransition(R.anim.app_open_enter, R.anim.app_open_exit);
             }
         } catch (Exception ex) {

@@ -111,6 +111,11 @@
     <!-- Soft outer glow around the glass focus highlight, in percent. On a dark dock band it reads as
          a grey haze around the tile; 0 leaves only the crisp rim. 100 = as designed. -->
     <integer name="focus_glow">0</integer>
+    <!-- Opening an app grows its tile to the middle of the screen and holds it for this many ms over
+         the app's first frames (YouTube draws half a second of black even when it is already running),
+         then fades out onto the app. Needs "display over other apps":
+         adb shell appops set com.gathin.tvhome SYSTEM_ALERT_WINDOW allow. 0 = off. -->
+    <integer name="launch_cover">0</integer>
 
     <!-- Optional Default-home tile; keep this key for existing themes and tile-ordering work.
          Off by default because the chooser is also available from launcher settings. -->
