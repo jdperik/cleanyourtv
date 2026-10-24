@@ -123,6 +123,11 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     private static int lastFocused = 0;
     /** App of the last focused tile, so focus follows it when the app list changes. */
     private static String lastFocusedKey;
+    /**
+     * From onStop to the next onResume: Home was left for an app, so a Home intent now means coming
+     * back. Not cleared in onStart, which on Android 12 runs before onNewIntent.
+     */
+    private boolean stopped;
     private float density;
     /** Module cards (res/values/config.xml, module_cards): discovered on resume, shown only after the owner's Show. */
     private boolean moduleCards;
@@ -453,13 +458,13 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
 
     /**
      * Home pressed while Home is already in front: singleTask delivers it here, then onResume runs.
-     * Back to the top with the first dock tile focused, like the stock launcher. Back from an app
-     * never comes this way, so returning to the app you left from is unchanged (#118).
+     * Back to the top with the first dock tile focused, like the stock launcher. Home pressed in an
+     * app comes this way too, while {@link #stopped}: that, like Back, returns to the tile you left from.
      */
     @Override
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
-        if (intent == null || !intent.hasCategory(Intent.CATEGORY_HOME)) return;
+        if (intent == null || !intent.hasCategory(Intent.CATEGORY_HOME) || stopped) return;
         grid.scrollToPosition(0);
         lastFocused = 0;
         lastFocusedKey = adapter.getItemCount() > 0 ? adapter.keyAt(0) : null;
@@ -490,6 +495,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
         updateInputsButton();
         sky.update();
         handler.postDelayed(minuteTick, MINUTE_MS);
+        stopped = false;
     }
 
     @Override
@@ -575,6 +581,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener {
     @Override
     protected void onStop() {
         super.onStop();
+        stopped = true;
         unregisterReceiver(packageReceiver);
         rebuildOnResume = true;
     }
